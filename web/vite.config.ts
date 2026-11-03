@@ -3,11 +3,18 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
-// API paths that must be proxied to the Go backend during local development.
-// In production these same prefixes are proxied by nginx (see nginx.conf).
-const API_PREFIXES = ['/dummyLogin', '/categories', '/assistants', '/runs', '/admin', '/_info'];
-
+// В dev-режиме API проксируется через /api, чтобы не пересекаться
+// с путями SPA (/assistants, /runs, /admin). Префикс /api срезается.
+// В production то же самое делает nginx (см. nginx.conf).
 const API_TARGET = process.env.VITE_PROXY_TARGET ?? 'http://localhost:8080';
+
+const apiProxy = {
+  '/api': {
+    target: API_TARGET,
+    changeOrigin: true,
+    rewrite: (path: string) => path.replace(/^\/api/, ''),
+  },
+};
 
 export default defineConfig({
   plugins: [react()],
@@ -19,13 +26,12 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    proxy: Object.fromEntries(
-      API_PREFIXES.map((prefix) => [prefix, { target: API_TARGET, changeOrigin: true }]),
-    ),
+    proxy: apiProxy,
   },
   preview: {
     port: 3000,
     host: true,
+    proxy: apiProxy,
   },
   test: {
     globals: true,

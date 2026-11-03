@@ -25,9 +25,10 @@ cp .env.example .env      # необязательно, дефолты подх�
 npm run dev                # http://localhost:3000
 ```
 
-Vite-дев-сервер проксирует API-префиксы (`/dummyLogin`, `/categories`, `/assistants`,
-`/runs`, `/admin`, `/_info`) на `http://localhost:8080` (см. `VITE_PROXY_TARGET`).
-Поэтому backend должен быть запущен на `8080`.
+Vite-дев-сервер проксирует `/api/*` на `http://localhost:8080` и срезает префикс
+`/api` (см. `VITE_PROXY_TARGET`). Поэтому backend должен быть запущен на `8080`.
+Отдельный префикс нужен, чтобы при обновлении страницы `/assistants`, `/runs/my`
+или `/admin/...` dev-сервер отдавал SPA, а не проксировал навигацию в API.
 
 ### Проверки
 
@@ -137,7 +138,7 @@ query-параметрами URL через `useSearchParams`, поэтому с
 
 | Переменная | По умолчанию | Назначение |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | пусто (`/`) | базовый URL API; пусто => относительные пути + прокси |
+| `VITE_API_BASE_URL` | `/api` | базовый URL API; по умолчанию относительный `/api` + прокси |
 | `VITE_PROXY_TARGET` | `http://localhost:8080` | куда Vite проксирует API в dev-режиме |
 
 В продакшн-контейнере API проксирует nginx (`web/nginx.conf`), поэтому браузер всегда

@@ -5,7 +5,9 @@ import type { ErrorCode, ErrorResponse } from '@/types/api';
  * Единый HTTP-клиент. Все компоненты ходят в API только через этот модуль
  * (слой api/*), чтобы не собирать URL и заголовки вручную.
  */
-const baseURL = import.meta.env.VITE_API_BASE_URL?.trim() || '/';
+// По умолчанию ходим через /api: этот префикс проксируют Vite и nginx.
+// Так пути API не пересекаются с путями SPA (/assistants, /runs, /admin).
+const baseURL = import.meta.env.VITE_API_BASE_URL?.trim() || '/api';
 
 export const http = axios.create({
   baseURL,

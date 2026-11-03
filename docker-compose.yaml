@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: agent_catalog
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+  backend:
+    build: .
+    ports:
+      - 8080:8080
+    environment:
+      PORT: :8080
+      DSN: postgres://postgres:1234@db:5432/agent_catalog 
+      LLMAPI:
+      BASE_URL:
+      LOGGER_FORMAT: json
+      SECRET: gBElG5NThZSye
+      TTL_TOKEN_MIN: 60
+    volumes:
+      - ./pkg/migrations:/pkg/migrations
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/_info || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+
+  web:
+    build: ./web
+    ports:
+      - 3000:80
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+
