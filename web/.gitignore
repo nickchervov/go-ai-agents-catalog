@@ -1,0 +1,15 @@
+# dependencies
+node_modules
+
+# build
+dist
+dist-ssr
+
+# env
+.env
+.env.local
+
+# tooling
+coverage
+*.local
+.DS_Store

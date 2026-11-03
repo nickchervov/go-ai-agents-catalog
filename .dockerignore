@@ -1,0 +1,7 @@
+*.exe
+*.db
+.gitignore
+.env
+.env.example
+api.yaml
+Fullstack-trainee-assignment-spring-2026.md
