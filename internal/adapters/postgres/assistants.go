@@ -8,8 +8,8 @@ import (
 	"github.com/nickchervov/go-ai-agents-catalog/internal/domain"
 )
 
-func (r *PostgresRepository) Assistants(ctx context.Context, page, pageSize int, search string, includeInactive bool, categoryID *uuid.UUID) ([]*domain.AssistantsResponse, error) {
-	assistants := make([]*domain.AssistantsResponse, 0)
+func (r *PostgresRepository) Assistants(ctx context.Context, page, pageSize int, search string, includeInactive bool, categoryID *uuid.UUID) ([]domain.AssistantsList, int, error) {
+	rows := make([]assistantsListRow, 0)
 	offset := (page - 1) * pageSize
 	query := `
 	SELECT 
@@ -23,8 +23,7 @@ func (r *PostgresRepository) Assistants(ctx context.Context, page, pageSize int,
 		a.ex_user_prompt,
 		a.is_activated,
 		a.created_at,
-		a.updated_at,
-		COUNT(*) OVER() as total_count
+		a.updated_at
 	FROM assistants a
 	LEFT JOIN categories c ON a.category_id = c.id
 	WHERE
@@ -39,9 +38,30 @@ func (r *PostgresRepository) Assistants(ctx context.Context, page, pageSize int,
 	if search != "" {
 		searchPattern = "%" + search + "%"
 	}
-	if err := r.db.SelectContext(ctx, &assistants, query, search, searchPattern, pageSize, offset, includeInactive, categoryID); err != nil {
-		return nil, fmt.Errorf("getting assistants from db: %w", err)
+	if err := r.db.SelectContext(ctx, &rows, query, search, searchPattern, pageSize, offset, includeInactive, categoryID); err != nil {
+		return nil, 0, fmt.Errorf("getting assistants from db: %w", err)
 	}
 
-	return assistants, nil
+	var total int
+	totalQuery := `
+	SELECT 
+		COUNT(id) 
+	FROM assistants a
+	WHERE
+		($4::uuid IS NULL OR a.category_id = $4::uuid)
+			AND
+		($3 = true OR a.is_activated = true)
+			AND
+		($1 = '' OR a.name ILIKE $2 OR a.description ILIKE $2)
+	`
+	if err := r.db.GetContext(ctx, &total, totalQuery, search, searchPattern, includeInactive, categoryID); err != nil {
+		return nil, 0, fmt.Errorf("getting total assistants from db: %w", err)
+	}
+
+	assistants := make([]domain.AssistantsList, 0, len(rows))
+	for _, row := range rows {
+		assistants = append(assistants, row.toDomain())
+	}
+
+	return assistants, total, nil
 }

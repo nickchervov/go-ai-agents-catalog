@@ -10,6 +10,11 @@ import (
 )
 
 func (s *AgentService) CreateAssistant(ctx context.Context, input dto.CreateAssistantInput) (*dto.CreateAssistantsOutput, error) {
+	if input.IsActivated == nil {
+		t := true
+		input.IsActivated = &t
+	}
+
 	assistant := dto.FromCreateAssistantDTO(input)
 
 	assistant.ID = uuid.New()

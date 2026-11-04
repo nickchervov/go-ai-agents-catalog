@@ -15,13 +15,25 @@ func (h *AgentsHandler) AdminRuns(w http.ResponseWriter, r *http.Request) {
 		JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: "incorrect status"}})
 		return
 	}
-	page, err := strconv.Atoi(r.URL.Query().Get("page"))
-	if err != nil {
-		page = 1
+	page := 1
+	strPage := r.URL.Query().Get("page")
+	if strPage != "" {
+		intPage, err := strconv.Atoi(strPage)
+		if err != nil {
+			JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: "incorrect page"}})
+			return
+		}
+		page = intPage
 	}
-	pageSize, err := strconv.Atoi(r.URL.Query().Get("pageSize"))
-	if err != nil {
-		pageSize = 20
+	pageSize := 20
+	strPageSize := r.URL.Query().Get("pageSize")
+	if strPageSize != "" {
+		intPageSize, err := strconv.Atoi(strPageSize)
+		if err != nil {
+			JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: "incorrect page size"}})
+			return
+		}
+		pageSize = intPageSize
 	}
 	if pageSize > 100 {
 		pageSize = 100
@@ -31,7 +43,7 @@ func (h *AgentsHandler) AdminRuns(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	input := dto.AdminRunsInput{
+	input := dto.AssistantRunsInput{
 		Status:   domain.RunStatus(status),
 		Page:     page,
 		PageSize: pageSize,

@@ -39,13 +39,13 @@ func FromCreateAssistantDTO(input CreateAssistantInput) *domain.Assistant {
 		Model:        input.Model,
 		SystemPrompt: input.SystemPrompt,
 		ExUserPrompt: input.ExUserPrompt,
-		IsActivated:  input.IsActivated,
+		IsActivated:  *input.IsActivated,
 	}
 
 	return &assistant
 }
 
-func ToCreateAssistantDTO(assistant *domain.AssistantsResponse) *CreateAssistantsOutput {
+func ToCreateAssistantDTO(assistant *domain.AssistantById) *CreateAssistantsOutput {
 	return &CreateAssistantsOutput{
 		ID:           assistant.ID,
 		Name:         assistant.Name,

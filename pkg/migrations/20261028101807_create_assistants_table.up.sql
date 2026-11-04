@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS assistants
     id uuid primary key,
     name varchar(128) not null default '',
     description text,
-    category_id uuid references categories(id) on delete cascade,
+    category_id uuid references categories(id) on delete cascade not null,
     model varchar(256) not null default '',
     system_prompt text not null,
     ex_user_prompt text,

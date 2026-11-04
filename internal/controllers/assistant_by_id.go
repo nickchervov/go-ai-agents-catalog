@@ -15,8 +15,12 @@ func (h *AgentsHandler) AssistantByID(w http.ResponseWriter, r *http.Request) {
 		JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: domain.ErrIncorrectID.Error()}})
 		return
 	}
+	userRole, _ := r.Context().Value("role").(string)
 
-	input := dto.ByIDAssistantsInput{ID: id}
+	input := dto.ByIDAssistantsInput{
+		ID:       id,
+		UserRole: userRole,
+	}
 
 	output, err := h.svc.AssistantByID(r.Context(), input)
 	if err != nil {

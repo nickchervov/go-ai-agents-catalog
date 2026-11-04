@@ -8,17 +8,18 @@ import (
 )
 
 func (s *AgentService) Assistants(ctx context.Context, input dto.GetAssistantsInput) (*dto.GetAssistantsResponse, error) {
-	assistants, err := s.repo.Assistants(ctx, input.Page, input.PageSize, input.Search, input.IncludeInactive, input.CategoryId)
+	assistants, total, err := s.repo.Assistants(ctx, input.Page, input.PageSize, input.Search, input.IncludeInactive, input.CategoryId)
 	if err != nil {
 		return nil, fmt.Errorf("getting assistants: %w", err)
 	}
 
-	userRole, ok := ctx.Value("role").(string)
-	if !ok {
-		return nil, fmt.Errorf("getting user role from ctx")
+	pagination := dto.PaginationOutput{
+		Page:     input.Page,
+		PageSize: input.PageSize,
+		Total:    total,
 	}
-	output, total := dto.ToGetAssistantsDTO(userRole, assistants)
 
-	response := dto.ToGetAssistantsResponse(output, dto.PaginationOutput{Page: input.Page, PageSize: input.PageSize, Total: total})
+	response := dto.ToGetAssistantsDTO(input.UserRole, assistants, pagination)
+
 	return response, nil
 }

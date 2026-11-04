@@ -8,7 +8,7 @@ import (
 )
 
 func (r *PostgresRepository) UpsertUser(ctx context.Context, user *domain.User) (*domain.User, error) {
-	var upsertedUser domain.User
+	var row userRow
 	query := `
 	INSERT INTO users 
 		(id, email, role) 
@@ -19,9 +19,10 @@ func (r *PostgresRepository) UpsertUser(ctx context.Context, user *domain.User) 
 		email = EXCLUDED.email
 	RETURNING id, email, role, created_at`
 
-	if err := r.db.GetContext(ctx, &upsertedUser, query, user.ID, user.Email, user.Role); err != nil {
+	if err := r.db.GetContext(ctx, &row, query, user.ID, user.Email, user.Role); err != nil {
 		return nil, fmt.Errorf("upserting user in db: %w", err)
 	}
 
+	upsertedUser := row.toDomain()
 	return &upsertedUser, nil
 }

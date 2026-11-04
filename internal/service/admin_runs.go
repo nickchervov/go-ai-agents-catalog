@@ -7,13 +7,11 @@ import (
 	"github.com/nickchervov/go-ai-agents-catalog/internal/dto"
 )
 
-func (s *AgentService) AdminRuns(ctx context.Context, input dto.AdminRunsInput) (*dto.AdminRunsResponse, error) {
-	runs, err := s.repo.AdminRuns(ctx, input.AssistantID, input.Page, input.PageSize, input.Status)
+func (s *AgentService) AdminRuns(ctx context.Context, input dto.AssistantRunsInput) (*dto.AssistantRunsResponse, error) {
+	runs, total, err := s.repo.AdminRuns(ctx, input.AssistantID, input.Page, input.PageSize, input.Status)
 	if err != nil {
 		return nil, fmt.Errorf("admin runs: %w", err)
 	}
-
-	output, total := dto.ToAdminRunsOutput(runs)
 
 	pagination := dto.PaginationOutput{
 		Page:     input.Page,
@@ -21,6 +19,6 @@ func (s *AgentService) AdminRuns(ctx context.Context, input dto.AdminRunsInput) 
 		Total:    total,
 	}
 
-	resp := dto.ToAdminRunsResponse(output, pagination)
+	resp := dto.ToAssistantRunsOutput(runs, pagination)
 	return resp, nil
 }

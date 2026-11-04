@@ -10,8 +10,8 @@ import (
 	"github.com/nickchervov/go-ai-agents-catalog/internal/domain"
 )
 
-func (r *PostgresRepository) AssistantByID(ctx context.Context, id uuid.UUID) (*domain.AssistantByIdResponse, error) {
-	var assistant domain.AssistantByIdResponse
+func (r *PostgresRepository) AssistantByID(ctx context.Context, id uuid.UUID) (*domain.AssistantById, error) {
+	var row assistantByIdRow
 	query := `
 	SELECT 
 		a.id,
@@ -28,11 +28,12 @@ func (r *PostgresRepository) AssistantByID(ctx context.Context, id uuid.UUID) (*
 	FROM assistants a 
 	LEFT JOIN categories c on a.category_id = c.id
 	WHERE a.id = $1`
-	if err := r.db.GetContext(ctx, &assistant, query, id); err != nil {
+	if err := r.db.GetContext(ctx, &row, query, id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrAssistantNotFound
 		}
 		return nil, fmt.Errorf("getting assistant by id from db: %w", err)
 	}
+	assistant := row.toDomain()
 	return &assistant, nil
 }

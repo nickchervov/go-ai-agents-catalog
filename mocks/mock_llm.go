@@ -1,4 +1,4 @@
-package llm
+package mocks
 
 import (
 	"context"
@@ -6,12 +6,13 @@ import (
 )
 
 type MockLLM struct {
-	WantErr bool
+	Result string
+	Err    error
 }
 
 func (m *MockLLM) SendMessage(ctx context.Context, model, systemPrompt, userPrompt string) (string, error) {
-	if m.WantErr {
-		return "", fmt.Errorf("creating response from mock llm")
+	if m.Err != nil {
+		return "", fmt.Errorf("creating response from mock llm: %w", m.Err)
 	}
 	return "Nice prompt take result back", nil
 }

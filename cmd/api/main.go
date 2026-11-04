@@ -18,6 +18,7 @@ import (
 	"github.com/nickchervov/go-ai-agents-catalog/internal/controllers"
 	"github.com/nickchervov/go-ai-agents-catalog/internal/llm"
 	"github.com/nickchervov/go-ai-agents-catalog/internal/service"
+	"github.com/nickchervov/go-ai-agents-catalog/mocks"
 	"github.com/nickchervov/go-ai-agents-catalog/pkg/logger"
 )
 
@@ -35,7 +36,7 @@ func RunApp(ctx context.Context, cfg config.Config) error {
 
 	var llmSender service.LLMSender
 	if cfg.WantMockLLM {
-		llmSender = &llm.MockLLM{}
+		llmSender = &mocks.MockLLM{}
 	} else {
 		llmSender = llm.NewLLMAgent(cfg.LLMAPI, cfg.BaseURL)
 	}
@@ -47,9 +48,9 @@ func RunApp(ctx context.Context, cfg config.Config) error {
 	server := http.Server{
 		Addr:         cfg.Port,
 		Handler:      r,
-		WriteTimeout: 10 * time.Second,
-		ReadTimeout:  15 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		ReadTimeout:  35 * time.Second,
+		IdleTimeout:  35 * time.Second,
 	}
 
 	gsCtx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)

@@ -18,7 +18,7 @@ type GetCategoriesResponse struct {
 	Categories []GetCategoriesOutput `json:"categories"`
 }
 
-func ToGetCategoriesDTO(categories []*domain.Category) *GetCategoriesResponse {
+func ToGetCategoriesDTO(categories []domain.Category) *GetCategoriesResponse {
 	output := make([]GetCategoriesOutput, 0)
 	for _, v := range categories {
 		dto := GetCategoriesOutput{ID: v.ID, Name: v.Name, Description: v.Description, CreatedAt: v.CreatedAt}

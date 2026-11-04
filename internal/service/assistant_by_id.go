@@ -12,11 +12,7 @@ func (s *AgentService) AssistantByID(ctx context.Context, input dto.ByIDAssistan
 	if err != nil {
 		return nil, fmt.Errorf("getting assistant by id: %w", err)
 	}
-	userRole, ok := ctx.Value("role").(string)
-	if !ok {
-		return nil, fmt.Errorf("getting user role from ctx: %w", err)
-	}
-	output := dto.ToGetByIDAssistantDTO(userRole, assistant)
+	output := dto.ToGetByIDAssistantDTO(input.UserRole, assistant)
 
 	return output, nil
 }

@@ -39,11 +39,11 @@ func FromUpdateAssistantDTO(input UpdateAssistantInput) *domain.Assistant {
 		Model:        input.Model,
 		SystemPrompt: input.SystemPrompt,
 		ExUserPrompt: input.ExUserPrompt,
-		IsActivated:  input.IsActivated,
+		IsActivated:  *input.IsActivated,
 	}
 }
 
-func ToUpdateAssistantDTO(assistant *domain.AssistantsResponse) *UpdateAssistantsOutput {
+func ToUpdateAssistantDTO(assistant *domain.AssistantById) *UpdateAssistantsOutput {
 	return &UpdateAssistantsOutput{
 		ID:           assistant.ID,
 		Name:         assistant.Name,

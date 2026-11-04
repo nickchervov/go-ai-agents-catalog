@@ -13,6 +13,7 @@ type GetAssistantsInput struct {
 	IncludeInactive bool
 	Page            int
 	PageSize        int
+	UserRole        string
 }
 
 type GetAssistantsOutput struct {
@@ -36,17 +37,13 @@ type PaginationOutput struct {
 }
 
 type GetAssistantsResponse struct {
-	Assistants []*GetAssistantsOutput `json:"assistants"`
-	Pagination PaginationOutput       `json:"pagination"`
+	Assistants []GetAssistantsOutput `json:"assistants"`
+	Pagination PaginationOutput      `json:"pagination"`
 }
 
-func ToGetAssistantsDTO(userRole string, assistants []*domain.AssistantsResponse) ([]*GetAssistantsOutput, int) {
-	output := make([]*GetAssistantsOutput, 0)
-	total := 0
+func ToGetAssistantsDTO(userRole string, assistants []domain.AssistantsList, pagination PaginationOutput) *GetAssistantsResponse {
+	output := make([]GetAssistantsOutput, 0)
 	for _, v := range assistants {
-		if total == 0 {
-			total = v.TotalCount
-		}
 		dto := GetAssistantsOutput{
 			ID:           v.ID,
 			Name:         v.Name,
@@ -62,12 +59,8 @@ func ToGetAssistantsDTO(userRole string, assistants []*domain.AssistantsResponse
 		if userRole == "admin" {
 			dto.SystemPrompt = v.SystemPrompt
 		}
-		output = append(output, &dto)
+		output = append(output, dto)
 	}
-	return output, total
-}
-
-func ToGetAssistantsResponse(output []*GetAssistantsOutput, pagination PaginationOutput) *GetAssistantsResponse {
 	return &GetAssistantsResponse{
 		Assistants: output,
 		Pagination: pagination,

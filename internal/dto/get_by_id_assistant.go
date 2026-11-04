@@ -8,7 +8,8 @@ import (
 )
 
 type ByIDAssistantsInput struct {
-	ID uuid.UUID
+	ID       uuid.UUID
+	UserRole string
 }
 
 type ByIDAssistantOutput struct {
@@ -25,7 +26,7 @@ type ByIDAssistantOutput struct {
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
-func ToGetByIDAssistantDTO(userRole string, assistant *domain.AssistantByIdResponse) *ByIDAssistantOutput {
+func ToGetByIDAssistantDTO(userRole string, assistant *domain.AssistantById) *ByIDAssistantOutput {
 	output := ByIDAssistantOutput{
 		ID:           assistant.ID,
 		Name:         assistant.Name,

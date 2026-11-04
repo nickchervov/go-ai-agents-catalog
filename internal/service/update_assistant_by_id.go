@@ -11,6 +11,10 @@ import (
 )
 
 func (s *AgentService) UpdateAssistant(ctx context.Context, id uuid.UUID, input dto.UpdateAssistantInput) (*dto.UpdateAssistantsOutput, error) {
+	if input.IsActivated == nil {
+		return nil, domain.ErrEmptyIsActivated
+	}
+
 	assistant := dto.FromUpdateAssistantDTO(input)
 	assistant.UpdatedAt = time.Now()
 

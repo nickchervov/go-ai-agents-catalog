@@ -9,13 +9,8 @@ import (
 	"github.com/nickchervov/go-ai-agents-catalog/internal/domain"
 )
 
-func (r *PostgresRepository) CreateAssistant(ctx context.Context, assistant *domain.Assistant) (*domain.AssistantsResponse, error) {
-	if assistant.IsActivated == nil {
-		t := true
-		assistant.IsActivated = &t
-	}
-
-	var newAssistant domain.AssistantsResponse
+func (r *PostgresRepository) CreateAssistant(ctx context.Context, assistant *domain.Assistant) (*domain.AssistantById, error) {
+	var row assistantByIdRow
 	query := `
 	WITH inserted_assistant AS (
 		INSERT INTO assistants 
@@ -41,7 +36,7 @@ func (r *PostgresRepository) CreateAssistant(ctx context.Context, assistant *dom
 	FROM inserted_assistant as ia
 	LEFT JOIN categories AS c ON ia.category_id = c.id`
 
-	if err := r.db.GetContext(ctx, &newAssistant, query, assistant.ID, assistant.Name, assistant.Description,
+	if err := r.db.GetContext(ctx, &row, query, assistant.ID, assistant.Name, assistant.Description,
 		assistant.CategoryID, assistant.Model, assistant.SystemPrompt, assistant.ExUserPrompt, assistant.IsActivated); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
@@ -49,5 +44,7 @@ func (r *PostgresRepository) CreateAssistant(ctx context.Context, assistant *dom
 		}
 		return nil, fmt.Errorf("inserting assistant into db: %w", err)
 	}
+
+	newAssistant := row.toDomain()
 	return &newAssistant, nil
 }

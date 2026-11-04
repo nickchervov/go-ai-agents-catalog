@@ -10,13 +10,25 @@ import (
 )
 
 func (h *AgentsHandler) Assistants(w http.ResponseWriter, r *http.Request) {
-	page, err := strconv.Atoi(r.URL.Query().Get("page"))
-	if err != nil {
-		page = 1
+	page := 1
+	strPage := r.URL.Query().Get("page")
+	if strPage != "" {
+		intPage, err := strconv.Atoi(strPage)
+		if err != nil {
+			JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: "incorrect page"}})
+			return
+		}
+		page = intPage
 	}
-	pageSize, err := strconv.Atoi(r.URL.Query().Get("pageSize"))
-	if err != nil {
-		pageSize = 10
+	pageSize := 10
+	strPageSize := r.URL.Query().Get("pageSize")
+	if strPageSize != "" {
+		intPageSize, err := strconv.Atoi(strPageSize)
+		if err != nil {
+			JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: "incorrect page size"}})
+			return
+		}
+		pageSize = intPageSize
 	}
 	if pageSize > 100 {
 		pageSize = 100
@@ -28,10 +40,13 @@ func (h *AgentsHandler) Assistants(w http.ResponseWriter, r *http.Request) {
 
 	search := r.URL.Query().Get("q")
 
+	userRole, _ := r.Context().Value("role").(string)
+
 	input := dto.GetAssistantsInput{
 		Page:     page,
 		PageSize: pageSize,
 		Search:   search,
+		UserRole: userRole,
 	}
 
 	includeInactive := r.URL.Query().Get("includeInactive")

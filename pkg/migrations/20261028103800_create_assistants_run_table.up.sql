@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS assistant_run
 (   
     id uuid primary key,
-    assistant_id uuid references assistants(id),
-    user_id uuid references users(id),
+    assistant_id uuid references assistants(id) not null,
+    user_id uuid references users(id) not null,
     user_prompt text not null default '',
     result text,
     status varchar(7) not null default 'pending' check(status IN ('pending','success','failed')),

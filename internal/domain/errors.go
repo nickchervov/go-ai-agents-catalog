@@ -7,16 +7,16 @@ import (
 )
 
 var (
-	ErrIncorrectCategoryName = errors.New("incorrect category name")
-	ErrIncorrectID           = errors.New("incorrect id")
-	ErrIncorrectUserID       = errors.New("incorrect user id")
-	ErrIncorrectAssistantID  = errors.New("incorrect assistant id")
-	ErrAssistantNotFound     = errors.New("assistant not found")
-	ErrIncorrectRole         = errors.New("incorrect role")
-	ErrAssistantInactive     = errors.New("assistant inactive")
-	ErrCategoryNotFound      = errors.New("category not found")
-	ErrEmptyUserPrompt       = errors.New("user prompt must be not empty")
-	ErrLLMProvider           = errors.New("LLM provider issue")
+	ErrIncorrectID          = errors.New("incorrect id")
+	ErrIncorrectUserID      = errors.New("incorrect user id")
+	ErrIncorrectAssistantID = errors.New("incorrect assistant id")
+	ErrAssistantNotFound    = errors.New("assistant not found")
+	ErrIncorrectRole        = errors.New("incorrect role")
+	ErrAssistantInactive    = errors.New("assistant inactive")
+	ErrCategoryNotFound     = errors.New("category not found")
+	ErrEmptyUserPrompt      = errors.New("user prompt must be not empty")
+	ErrLLMProvider          = errors.New("LLM provider issue")
+	ErrEmptyIsActivated     = errors.New("is activated must be not empty")
 )
 
 var (

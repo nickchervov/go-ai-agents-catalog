@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nickchervov/go-ai-agents-catalog/internal/domain"
@@ -10,7 +12,7 @@ import (
 )
 
 func (s *AgentService) RunAssistant(ctx context.Context, input dto.RunAssistantInput) (*dto.RunAssistantOutput, error) {
-	if input.UserPrompt == "" {
+	if strings.TrimSpace(input.UserPrompt) == "" {
 		return nil, domain.ErrEmptyUserPrompt
 	}
 
@@ -22,6 +24,7 @@ func (s *AgentService) RunAssistant(ctx context.Context, input dto.RunAssistantI
 		UserID:      input.UserID,
 		UserPrompt:  input.UserPrompt,
 		Status:      domain.Pending,
+		CreatedAt:   time.Now(),
 	}
 
 	assistant, err := s.repo.AssistantByID(ctx, input.AssistantId)
@@ -37,9 +40,22 @@ func (s *AgentService) RunAssistant(ctx context.Context, input dto.RunAssistantI
 		return nil, fmt.Errorf("upsert run assistant: %w", err)
 	}
 
-	result, err := s.llm.SendMessage(ctx, assistant.Model, assistant.SystemPrompt, runs.UserPrompt)
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	result, err := s.llm.SendMessage(timeoutCtx, assistant.Model, assistant.SystemPrompt, runs.UserPrompt)
 	if err != nil {
 		runs.Error = err.Error()
+		runs.Status = domain.Failed
+
+		if err := s.repo.RunAssistant(ctx, &runs); err != nil {
+			return nil, fmt.Errorf("upsert run assistant after err: %w", err)
+		}
+
+		return nil, domain.ErrLLMProvider
+	}
+	if strings.TrimSpace(result) == "" {
+		runs.Error = "empty result"
 		runs.Status = domain.Failed
 
 		if err := s.repo.RunAssistant(ctx, &runs); err != nil {
@@ -67,6 +83,7 @@ func (s *AgentService) RunAssistant(ctx context.Context, input dto.RunAssistantI
 		Output:        runs.Result,
 		Status:        runs.Status,
 		Error:         runs.Error,
+		CreatedAt:     runs.CreatedAt,
 	}
 	return &output, nil
 }

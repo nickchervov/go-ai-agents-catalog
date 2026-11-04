@@ -15,13 +15,25 @@ func (h *AgentsHandler) UserRuns(w http.ResponseWriter, r *http.Request) {
 		JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: "incorrect status"}})
 		return
 	}
-	page, err := strconv.Atoi(r.URL.Query().Get("page"))
-	if err != nil {
-		page = 1
+	page := 1
+	strPage := r.URL.Query().Get("page")
+	if strPage != "" {
+		intPage, err := strconv.Atoi(strPage)
+		if err != nil {
+			JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: "incorrect page"}})
+			return
+		}
+		page = intPage
 	}
-	pageSize, err := strconv.Atoi(r.URL.Query().Get("pageSize"))
-	if err != nil {
-		pageSize = 20
+	pageSize := 20
+	strPageSize := r.URL.Query().Get("pageSize")
+	if strPageSize != "" {
+		intPageSize, err := strconv.Atoi(strPageSize)
+		if err != nil {
+			JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: "incorrect page size"}})
+			return
+		}
+		pageSize = intPageSize
 	}
 	if pageSize > 100 {
 		pageSize = 100
@@ -31,17 +43,19 @@ func (h *AgentsHandler) UserRuns(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, err := uuid.Parse(r.Context().Value("userId").(string))
+	userId, _ := r.Context().Value("userId").(string)
+
+	parsedUserUUID, err := uuid.Parse(userId)
 	if err != nil {
 		JSON(w, http.StatusBadRequest, map[string]ErrorMessage{"error": {Code: domain.ErrCodeInvalidRequest, Message: domain.ErrIncorrectUserID.Error()}})
 		return
 	}
 
-	input := dto.UserRunsInput{
+	input := dto.UserAssistantRunsInput{
 		Status:   domain.RunStatus(status),
 		Page:     page,
 		PageSize: pageSize,
-		UserID:   userId,
+		UserID:   parsedUserUUID,
 	}
 
 	output, err := h.svc.UserRuns(r.Context(), input)
