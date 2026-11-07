@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -50,6 +51,22 @@ func (r *MockRepo) Assistants(ctx context.Context, page, pageSize int, search st
 		return assistants, 0, nil
 	}
 
+	if !includeInactive && !r.Assistant.IsActivated {
+		return assistants, 0, nil
+	}
+
+	if categoryID != nil {
+		if r.Assistant.CategoryID != *categoryID {
+			return assistants, 0, nil
+		}
+	}
+
+	if strings.TrimSpace(search) != "" {
+		if !strings.Contains(r.Assistant.Name, search) && !strings.Contains(r.Assistant.Description, search) {
+			return assistants, 0, nil
+		}
+	}
+
 	list := domain.AssistantsList{
 		Assistant:    *r.Assistant,
 		CategoryName: r.Category.Name,
@@ -83,6 +100,10 @@ func (r *MockRepo) AssistantByID(ctx context.Context, id uuid.UUID) (*domain.Ass
 		return nil, r.Err
 	}
 
+	if r.Assistant == nil {
+		return nil, domain.ErrAssistantNotFound
+	}
+
 	if r.Assistant.ID != id {
 		return nil, domain.ErrAssistantNotFound
 	}
@@ -106,11 +127,18 @@ func (r *MockRepo) UpdateAssistantByID(ctx context.Context, id uuid.UUID, assist
 	if assistant.CategoryID != r.Category.ID {
 		return nil, domain.ErrCategoryNotFound
 	}
-	assistant.UpdatedAt = time.Now()
-	r.Assistant = assistant
+
+	r.Assistant.Name = assistant.Name
+	r.Assistant.Description = assistant.Description
+	r.Assistant.CategoryID = assistant.CategoryID
+	r.Assistant.Model = assistant.Model
+	r.Assistant.SystemPrompt = assistant.SystemPrompt
+	r.Assistant.ExUserPrompt = assistant.ExUserPrompt
+	r.Assistant.IsActivated = assistant.IsActivated
+	r.Assistant.UpdatedAt = time.Now()
 
 	assistantById := domain.AssistantById{
-		Assistant:    *assistant,
+		Assistant:    *r.Assistant,
 		CategoryName: r.Category.Name,
 	}
 	return &assistantById, nil

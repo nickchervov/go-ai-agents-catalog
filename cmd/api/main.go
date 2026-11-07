@@ -36,7 +36,7 @@ func RunApp(ctx context.Context, cfg config.Config) error {
 
 	var llmSender service.LLMSender
 	if cfg.WantMockLLM {
-		llmSender = &mocks.MockLLM{}
+		llmSender = &mocks.MockLLM{Result: "Nice prompt take result back"}
 	} else {
 		llmSender = llm.NewLLMAgent(cfg.LLMAPI, cfg.BaseURL)
 	}
