@@ -12,6 +12,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var migrationPath = "pkg/migrations"
+
 type PostgresRepository struct {
 	db *sqlx.DB
 }
@@ -23,7 +25,7 @@ func migrateUP(db *sqlx.DB) error {
 		return fmt.Errorf("creating db driver: %w", err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://pkg/migrations", "pgx", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://"+migrationPath, "pgx", driver)
 	if err != nil {
 		db.Close()
 		return fmt.Errorf("creating migrate: %w", err)
