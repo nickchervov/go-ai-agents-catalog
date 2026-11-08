@@ -109,7 +109,7 @@ Frontend:
 - При запуске ассистента `user_id` берётся из токена, а не из тела запроса.
 - `systemPrompt` — внутренняя настройка: администратор получает его в API, обычный пользователь — пустое значение. Frontend его не отображает.
 
-## Запуск ассистента и история
+## Запуск ассистента и LLM
 
 1. Проверяется, что `userPrompt` не пустой после `TrimSpace`.
 2. Загружается ассистент; если не найден — 404, если выключен — 409.
@@ -120,9 +120,7 @@ Frontend:
 
 Запись обновляется по `id` (upsert). Каждый запуск сохраняется независимо от результата LLM. Если процесс упадёт между `pending` и финальным обновлением, запуск останется в `pending` — для тестового задания это допустимо.
 
-## LLM: mock и реальный провайдер
-
-По умолчанию используется `mocks.MockLLM`: без сети, детерминированный ответ `"Nice prompt take result back"`. Это позволяет запускать проект и тесты без ключей.
+По умолчанию используется `mocks.MockLLM` с детерминированным ответом `"Nice prompt take result back"`: сеть и ключи не нужны.
 
 Контракт провайдера:
 
@@ -130,7 +128,7 @@ Frontend:
 SendMessage(ctx context.Context, model, systemPrompt, userPrompt string) (string, error)
 ```
 
-Backend формирует запрос из трёх полей ассистента и пользовательского ввода. Пример итогового запроса к OpenAI-compatible API:
+Пример итогового запроса к OpenAI-compatible API:
 
 ```json
 {
@@ -142,7 +140,7 @@ Backend формирует запрос из трёх полей ассисте�
 
 `instructions` — `systemPrompt`, `input` — `userPrompt`. Frontend не передаёт системный промпт.
 
-Переключение на реальный провайдер: в `docker-compose.yaml` задать непустые `LLMAPI` и `BASE_URL` (или подключить override-файл):
+Переключение на реальный провайдер: задать непустые `LLMAPI` и `BASE_URL` (например, через override-файл):
 
 ```yaml
 # docker-compose.override.yaml
@@ -157,7 +155,7 @@ services:
 docker compose -f docker-compose.yaml -f docker-compose.override.yaml up --build
 ```
 
-Если `LLMAPI` или `BASE_URL` пусты, backend принудительно использует mock. Поддерживается любой OpenAI-compatible endpoint, включая локальный.
+Если `LLMAPI` или `BASE_URL` пусты, backend использует mock. Поддерживается любой OpenAI-compatible endpoint.
 
 Обработка сбоев:
 
@@ -198,7 +196,37 @@ docker compose -f docker-compose.yaml -f docker-compose.override.yaml up --build
 - на страницах с запросами есть loading/error/empty состояния;
 - системный промпт не показывается обычному пользователю.
 
-Проверки:
+## Тесты
+
+### Backend
+
+Unit-тесты сервисов:
+
+```bash
+go test ./internal/service -cover
+# ok ... coverage: 89.9% of statements
+```
+
+Интеграционные тесты репозитория на реальной PostgreSQL через `testcontainers-go`:
+
+```bash
+go test -tags=integration ./internal/adapters/postgres -v
+# 7 тестов, ~6 секунд
+go test -tags=integration ./internal/adapters/postgres -cover
+# coverage: 65.3% of statements
+```
+
+Интеграционные тесты требуют запущенного Docker. Обычный `go test ./...` их не запускает — они закрыты build tag `integration`.
+
+Общие проверки:
+
+```bash
+gofmt -l .
+go vet ./...
+go build ./...
+```
+
+### Frontend
 
 ```bash
 cd web
@@ -208,41 +236,7 @@ npm run build
 npm run lint
 ```
 
-Текущее покрытие frontend: **36.77% statements, 69.93% branches, 43.51% functions, 36.77% lines**. Основные непокрытые зоны — admin-страницы, таблица запусков и layout; их нужно добавить в тесты.
-
-## Тесты
-
-Команды:
-
-```bash
-gofmt -l .
-go vet ./...
-go test ./... -cover
-cd web && npm test && npm run coverage
-```
-
-Обязательный минимум по заданию:
-
-**Backend, unit:**
-
-- `RunAssistant`: успешный запуск; ошибка LLM; пустой ответ; неактивный ассистент; пустой `userPrompt`; ассистент не найден;
-- `CreateAssistant`: `isActive` по умолчанию `true`; валидация обязательных полей; несуществующая категория;
-- `UpdateAssistant`: отсутствующий `isActive` → 400; успешное обновление; несуществующая категория; ассистент не найден;
-- `Assistants`: фильтр по `categoryId`; `includeInactive` только для admin; поиск; пагинация и `total`;
-- `DummyLogin`: фиксированные UUID и роли; некорректная роль.
-
-**Backend, интеграционный/E2E:**
-
-- `admin создал категорию → admin создал ассистента → user запустил ассистента → запуск есть в истории`;
-- фильтрация ассистентов по `categoryId` возвращает только выбранную категорию;
-- запуск неактивного ассистента запрещён (409);
-- негативные сценарии: 401 без токена, 403 для пользователя на admin-роутах, ошибка LLM.
-
-E2E следует запускать на отдельной тестовой БД, а не на основной.
-
-**Frontend:** минимум 3 теста на компоненты/сценарии — логин, каталог и фильтры, карточка/запуск, валидация формы. Сейчас в репозитории 10 тестов в 4 файлах.
-
-Coverage backend добавляется вместе с тестами: `go test ./... -cover`. После реализации тестов значения coverage нужно обновить в этом разделе.
+Текущее покрытие frontend: **36.77% statements, 69.93% branches, 43.51% functions, 36.77% lines**. Основные непокрытые зоны — admin-страницы, таблица запусков и layout.
 
 ## Принятые решения
 
