@@ -38,6 +38,7 @@ func Routes(logger *slog.Logger, svc *service.AgentService, validator TokenValid
 			r.Post("/assistants", h.CreateAssistant)
 			r.Put("/assistants/{assistantId}", h.UpdateAssistantByID)
 			r.Get("/admin/runs", h.AdminRuns)
+			r.Get("/models", h.Models)
 		})
 	})
 

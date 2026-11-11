@@ -19,8 +19,8 @@ services:
     environment:
       PORT: :8080
       DSN: postgres://postgres:1234@db:5432/agent_catalog 
-      LLMAPI: ""
-      BASE_URL: ""
+      LLMAPI: "sk-0ssbj4-cSx8YydD-686aOrLFIMXJJbdh"
+      BASE_URL: "https://routerai.ru/api/v1"
       LOGGER_FORMAT: json
       SECRET: gBElG5NThZSye
       TTL_TOKEN_MIN: 60

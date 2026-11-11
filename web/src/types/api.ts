@@ -119,6 +119,10 @@ export interface CategoriesResponse {
   categories: Category[];
 }
 
+export interface ModelsResponse {
+  models: string[];
+}
+
 export interface RunsResponse {
   runs: AssistantRun[];
   pagination: Pagination;

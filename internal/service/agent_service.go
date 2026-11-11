@@ -24,16 +24,17 @@ type TokenCreator interface {
 	CreateJWTToken(userID, role, email string) (string, error)
 }
 
-type LLMSender interface {
+type LLM interface {
 	SendMessage(ctx context.Context, model, systemPrompt, userPrompt string) (string, error)
+	Models(ctx context.Context) ([]string, error)
 }
 
 type AgentService struct {
 	repo         AgentsRepository
 	tokenCreator TokenCreator
-	llm          LLMSender
+	llm          LLM
 }
 
-func NewAgentService(repo AgentsRepository, creator TokenCreator, llm LLMSender) *AgentService {
+func NewAgentService(repo AgentsRepository, creator TokenCreator, llm LLM) *AgentService {
 	return &AgentService{repo: repo, tokenCreator: creator, llm: llm}
 }

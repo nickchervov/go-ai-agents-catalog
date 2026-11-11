@@ -34,14 +34,14 @@ func RunApp(ctx context.Context, cfg config.Config) error {
 
 	token := auth.NewJWTProvider(cfg.Secret, cfg.TTLToken)
 
-	var llmSender service.LLMSender
+	var llmAgent service.LLM
 	if cfg.WantMockLLM {
-		llmSender = &mocks.MockLLM{Result: "Nice prompt take result back"}
+		llmAgent = &mocks.MockLLM{Result: "Nice prompt take result back"}
 	} else {
-		llmSender = llm.NewLLMAgent(cfg.LLMAPI, cfg.BaseURL)
+		llmAgent = llm.NewLLMAgent(cfg.LLMAPI, cfg.BaseURL)
 	}
 
-	svc := service.NewAgentService(repo, token, llmSender)
+	svc := service.NewAgentService(repo, token, llmAgent)
 
 	r := controllers.Routes(logger, svc, token)
 

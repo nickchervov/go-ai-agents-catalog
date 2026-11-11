@@ -24,6 +24,7 @@ type AgentsService interface {
 	RunAssistant(ctx context.Context, input dto.RunAssistantInput) (*dto.RunAssistantOutput, error)
 	UpdateAssistant(ctx context.Context, id uuid.UUID, input dto.UpdateAssistantInput) (*dto.UpdateAssistantsOutput, error)
 	UserRuns(ctx context.Context, input dto.UserAssistantRunsInput) (*dto.AssistantRunsResponse, error)
+	Models(ctx context.Context) (*dto.ModelsOutput, error)
 }
 
 type ErrorMessage struct {

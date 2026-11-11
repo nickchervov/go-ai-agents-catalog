@@ -17,5 +17,6 @@ export { http };
 export { authApi } from './auth';
 export { categoriesApi } from './categories';
 export { assistantsApi } from './assistants';
+export { modelsApi } from './models';
 export { runsApi } from './runs';
 export { ApiError, toApiError } from './http';

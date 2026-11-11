@@ -32,3 +32,18 @@ func (a *LLMAgent) SendMessage(ctx context.Context, model, systemPrompt, userPro
 
 	return resp.GetOutputText(), nil
 }
+
+func (a *LLMAgent) Models(ctx context.Context) ([]string, error) {
+	models, err := a.client.ListModels(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get list models: %w", err)
+	}
+
+	modelsIDs := make([]string, 0, len(models.Models))
+
+	for _, m := range models.Models {
+		modelsIDs = append(modelsIDs, m.ID)
+	}
+
+	return modelsIDs, nil
+}

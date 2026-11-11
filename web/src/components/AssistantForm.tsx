@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useCategories } from '@/hooks/queries';
+import { useEffect, useState } from 'react';
+import { useCategories, useModels } from '@/hooks/queries';
 import { Button, FieldError } from '@/components/Button';
 import { isUuid, required } from '@/lib/validation';
 import type { Assistant } from '@/types/api';
@@ -29,7 +29,7 @@ const EMPTY: AssistantFormValues = {
   categoryId: '',
   name: '',
   description: '',
-  model: 'mock-smart',
+  model: '',
   systemPrompt: '',
   exampleUserPrompt: '',
   isActive: true,
@@ -44,6 +44,7 @@ export function AssistantForm({
   onCancel,
 }: AssistantFormProps) {
   const categoriesQuery = useCategories();
+  const modelsQuery = useModels();
   const [values, setValues] = useState<AssistantFormValues>(() =>
     initial
       ? {
@@ -58,6 +59,32 @@ export function AssistantForm({
       : EMPTY,
   );
   const [errors, setErrors] = useState<Errors>({});
+  const [modelSearch, setModelSearch] = useState('');
+
+  const models = modelsQuery.data ?? [];
+  const hasModels = modelsQuery.isSuccess && models.length > 0;
+  // Текущая модель может отсутствовать в списке провайдера (например, старая запись).
+  const modelOptions =
+    values.model && !models.includes(values.model) ? [values.model, ...models] : models;
+
+  const normalizedModelSearch = modelSearch.trim().toLowerCase();
+  const filteredModels = modelOptions.filter((model) =>
+    model.toLowerCase().includes(normalizedModelSearch),
+  );
+  // Текущее значение всегда должно оставаться в options, иначе select покажет пустоту.
+  const visibleModels =
+    values.model && !filteredModels.includes(values.model)
+      ? [values.model, ...filteredModels]
+      : filteredModels;
+
+  // При создании подставляем первую доступную модель, когда список загрузился.
+  useEffect(() => {
+    const available = modelsQuery.data;
+    if (initial || !available?.length) return;
+    if (!available.includes(values.model)) {
+      setValues((prev) => ({ ...prev, model: available[0] }));
+    }
+  }, [initial, modelsQuery.data, values.model]);
 
   const set = <K extends keyof AssistantFormValues>(key: K, value: AssistantFormValues[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -149,14 +176,57 @@ export function AssistantForm({
         <label className="field__label" htmlFor="model">
           Модель *
         </label>
-        <input
-          id="model"
-          className="input mono"
-          value={values.model}
-          onChange={(e) => set('model', e.target.value)}
-          placeholder="mock-smart"
-        />
+        {hasModels ? (
+          <>
+            <input
+              className="input"
+              aria-label="Поиск модели"
+              placeholder="Поиск модели…"
+              value={modelSearch}
+              onChange={(e) => setModelSearch(e.target.value)}
+            />
+            <select
+              id="model"
+              className="input mono"
+              value={values.model}
+              onChange={(e) => set('model', e.target.value)}
+            >
+              {visibleModels.map((model) => (
+                <option key={model} value={model}>
+                  {model}
+                </option>
+              ))}
+            </select>
+            {filteredModels.length === 0 && (
+              <span className="field__hint">
+                По запросу ничего не найдено — показана текущая модель.
+              </span>
+            )}
+          </>
+        ) : (
+          <input
+            id="model"
+            className="input mono"
+            value={values.model}
+            onChange={(e) => set('model', e.target.value)}
+            placeholder={modelsQuery.isLoading ? 'Загружаем модели…' : 'mock-smart'}
+            disabled={modelsQuery.isLoading}
+          />
+        )}
         <FieldError>{errors.model}</FieldError>
+        {modelsQuery.isError && (
+          <span className="field__hint">
+            Не удалось загрузить список моделей — введите название вручную.
+          </span>
+        )}
+        {modelsQuery.isSuccess && models.length === 0 && (
+          <span className="field__hint">
+            Провайдер не вернул модели — введите название вручную.
+          </span>
+        )}
+        {hasModels && initial && !models.includes(values.model) && (
+          <span className="field__hint">Текущая модель отсутствует в списке провайдера.</span>
+        )}
       </div>
 
       <div className={`field ${errors.systemPrompt ? 'field--invalid' : ''}`}>

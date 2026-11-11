@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { assistantsApi, categoriesApi, runsApi } from '@/api';
+import { assistantsApi, categoriesApi, modelsApi, runsApi } from '@/api';
 import { queryKeys } from '@/api/queryKeys';
 import type {
   AdminRunsQuery,
@@ -15,6 +15,14 @@ export function useCategories() {
   return useQuery({
     queryKey: queryKeys.categories,
     queryFn: () => categoriesApi.list(),
+    staleTime: 60_000,
+  });
+}
+
+export function useModels() {
+  return useQuery({
+    queryKey: queryKeys.models,
+    queryFn: () => modelsApi.list(),
     staleTime: 60_000,
   });
 }

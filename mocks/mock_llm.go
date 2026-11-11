@@ -18,3 +18,11 @@ func (m *MockLLM) SendMessage(ctx context.Context, model, systemPrompt, userProm
 	m.Counter++
 	return m.Result, nil
 }
+
+func (m *MockLLM) Models(ctx context.Context) ([]string, error) {
+	if m.Err != nil {
+		return nil, fmt.Errorf("getting models list: %w", m.Err)
+	}
+
+	return []string{"mock-model"}, nil
+}
