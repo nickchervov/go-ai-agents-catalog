@@ -93,6 +93,7 @@ Frontend:
 | GET | `/assistants` | авторизованные | каталог: `categoryId`, `q`, `includeInactive`, `page`, `pageSize` |
 | POST | `/assistants` | admin | создание ассистента |
 | GET | `/assistants/{assistantId}` | авторизованные | карточка ассистента |
+| GET | `/models` | admin | список моделей LLM-провайдера |
 | PUT | `/assistants/{assistantId}` | admin | редактирование; `isActive` обязателен |
 | POST | `/assistants/{assistantId}/run` | авторизованные | запуск; в теле только `userPrompt` |
 | GET | `/runs/my` | авторизованные | история запусков текущего пользователя |
@@ -193,6 +194,7 @@ docker compose -f docker-compose.yaml -f docker-compose.override.yaml up --build
 - Axios-интерцептор подставляет `Authorization` и при 401 очищает сессию;
 - admin-роуты защищены guard-компонентом;
 - фильтры каталога синхронизированы с query-параметрами URL;
+- модель ассистента выбирается из `GET /models`; в форме есть клиентский поиск по названию модели — фильтрация списка без дополнительного запроса к API;
 - на страницах с запросами есть loading/error/empty состояния;
 - системный промпт не показывается обычному пользователю.
 
@@ -230,13 +232,13 @@ go build ./...
 
 ```bash
 cd web
-npm test          # 10 тестов
+npm test          # 11 тестов
 npm run coverage  # покрытие v8
 npm run build
 npm run lint
 ```
 
-Текущее покрытие frontend: **36.77% statements, 69.93% branches, 43.51% functions, 36.77% lines**. Основные непокрытые зоны — admin-страницы, таблица запусков и layout.
+Текущее покрытие frontend: **38.33% statements, 70.83% branches, 45.13% functions, 38.33% lines**. Основные непокрытые зоны — admin-страницы, таблица запусков и layout.
 
 ## Принятые решения
 
@@ -245,4 +247,5 @@ npm run lint
 - `isActive` при создании по умолчанию `true`; при обновлении поле обязательно, иначе 400.
 - Mock-LLM вынесен в `mocks/`, чтобы production-код не зависел от тестовой реализации.
 - Один `AgentService` и один репозиторий — осознанный выбор для размера тестового задания; дробление на микросервисы не требуется.
+- `GET /models` и поиск по названию модели добавлены сверх `api.yaml`: в контракте задания этого эндпоинта и такого поведения формы не было. Поиск реализован на клиенте, backend-контракт не расширялся.
 - Frontend написан с помощью ИИ; основные усилия направлены на backend, контракт и БД.
